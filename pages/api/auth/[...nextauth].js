@@ -68,9 +68,8 @@ export default NextAuth({
           accessTokenExpires: account.expires_at * 1000, //in miliseconds
         };
       }
-
       //if access token valid
-      if(Date.now() < token.accessTokenExpires){
+      else if(Date.now() < token.accessTokenExpires){
           console.log(`EXISTING TOKEN VALID`)
           return token;
       }
