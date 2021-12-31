@@ -2,13 +2,14 @@ import { useSession, signIn } from "next-auth/react"
 import { useEffect } from "react";
 import SpotifyWebApi from "spotify-web-api-node";
 
-const { NEXTAUTH_URL } = process.env;
+
+const { NEXT_PUBLIC_VERCEL_URL,SPOTIFY_CLIENT_SECRET,SPOTIFY_CLIENT_ID } = process.env;
 
 
 const spotifyApi = new SpotifyWebApi({
-    clientId: process.env.SPOTIFY_CLIENT_ID,
-    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-    redirectUri: `${NEXTAUTH_URL}/api/auth/callback/spotify`
+    clientId: SPOTIFY_CLIENT_ID,
+    clientSecret: SPOTIFY_CLIENT_SECRET,
+    redirectUri: `${NEXT_PUBLIC_VERCEL_URL}/api/auth/callback/spotify`
 })
 
 function useSpotify() {
