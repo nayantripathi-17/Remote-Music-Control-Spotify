@@ -1,29 +1,32 @@
+/* eslint-disable @next/next/no-img-element */
 import { useRecoilState } from "recoil";
 import useSpotify from "../hooks/useSpotify"
-import {millisecondsToMinutesAndSeconds} from "../lib/time"
-import {currentTrackIdState,isPlayingState} from "../atoms/songAtom"
+import { millisecondsToMinutesAndSeconds } from "../lib/time"
+import { currentTrackIdState, isPlayingState } from "../atoms/songAtom"
+import { SongProps } from "../types";
 
-function Song({track,order}) {
+function Song({ track, order }: SongProps) {
+
     const spotifyApi = useSpotify();
-    const [currentTrackId,setCurrentTrackId] = useRecoilState(currentTrackIdState);
-    const [isPlaying,setIsPlaying] = useRecoilState(isPlayingState);
+    const [currentTrackId, setCurrentTrackId] = useRecoilState(currentTrackIdState);
+    const [isPlaying, setIsPlaying] = useRecoilState(isPlayingState);
 
-    const playSong = ()=>{
+    const playSong = () => {
         setCurrentTrackId(track.track.id)
         setIsPlaying(true)
         spotifyApi.play({
             uris: [track.track.uri],
-        }).catch(err=>console.log(err))       
+        }).catch(err => console.log(err))
     }
 
 
     return (
         <div className="grid grid-cols-2 text-gray-500 py-4 px-5
         hover:bg-gray-900 rounded-lg cursor-pointer"
-        onClick={playSong}>
+            onClick={playSong}>
             <div className="flex items-center space-x-3">
                 <p>{order + 1}</p>
-                <img className="h-10 w-10" alt={track?.track?.name} src={track?.track?.album?.images[0]?.url}/>
+                <img className="h-10 w-10" alt={track?.track?.name} src={track?.track?.album?.images[0]?.url} />
                 <div>
                     <p className="w-36 lg:w-64 truncate text-white">{track?.track?.name}</p>
                     <p>{track?.track?.artists[0]?.name}</p>

@@ -1,8 +1,8 @@
 import SpotifyWebApi from "spotify-web-api-node";
 import queryString from "query-string";
-const { NEXT_PUBLIC_VERCEL_URL,SPOTIFY_CLIENT_SECRET,SPOTIFY_CLIENT_ID } =  process.env;
+import urljoin from "url-join";
 
-const scopes= [
+const scopes = [
     "user-read-email",
     "user-read-private",
     "user-read-playback-state",
@@ -17,18 +17,21 @@ const scopes= [
     "user-read-playback-position"
 ].join(" ");
 
+const { DEPLOYED_URL } = process.env;
+const redirect_uri = urljoin(String(DEPLOYED_URL), `api`, `auth`, `callback`, `spotify`)
+
 const params = {
     scope: scopes,
     response_type: 'code',
-    redirect_uri: `${NEXT_PUBLIC_VERCEL_URL}/api/auth/callback/spotify`
+    redirect_uri: redirect_uri
 }
 
-const LOGIN_URL = `https://accounts.spotify.com/authorize?${queryString.stringify(params)}`
+const LOGIN_URL = urljoin(`https://accounts.spotify.com`, `authorize`, `?${queryString.stringify(params)}`)
 
 const spotifyApi = new SpotifyWebApi({
-    clientId: SPOTIFY_CLIENT_ID,
-    clientSecret: SPOTIFY_CLIENT_SECRET,
-    redirectUri: `${NEXT_PUBLIC_VERCEL_URL}/api/auth/callback/spotify`
+    clientId: process.env.SPOTIFY_CLIENT_ID,
+    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+    redirectUri: redirect_uri
 });
 
 export default spotifyApi
