@@ -1,12 +1,6 @@
-// @ts-ignore
-const withBundleAnalyzer = require("@next/bundle-analyzer")({
-  enabled: process.env.ANALYZE === "true",
-});
-module.exports = withBundleAnalyzer({});
-
 const ContentSecurityPolicy = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval';
+    script-src 'self';
     style-src 'self' 'unsafe-inline';
     child-src 'self';
     font-src 'self';
@@ -47,7 +41,12 @@ const securityHeaders = [
   },
 ];
 
-module.exports = {
+// @ts-ignore
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE === "true",
+});
+
+module.exports = withBundleAnalyzer({
   async headers() {
     return [
       {
@@ -67,4 +66,4 @@ module.exports = {
     }
     return config;
   },
-};
+});

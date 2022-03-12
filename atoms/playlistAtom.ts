@@ -6,7 +6,7 @@ export const playlistState: RecoilState<SpotifyApi.SinglePlaylistResponse | Spot
 })
 
 export const playlistTrackState: RecoilState<SpotifyApi.SavedTrackObject[] | SpotifyApi.PlaylistTrackObject[]> = atom({
-    key: "playlistState",
+    key: "playlistTrackState",
     default: []
 })
 

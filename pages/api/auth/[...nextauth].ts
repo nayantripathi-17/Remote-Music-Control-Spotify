@@ -6,6 +6,7 @@ import { JWTtoken, SpotifyAccount, SpotifyUser } from "../../../types";
 
 async function refreshAccessToken(token: JWTtoken) {
   try {
+    if (token === undefined) return
     if (!(token.accessToken && token.refreshToken)) throw "accessToken/refreshToken undefined"
     spotifyApi.setAccessToken(token.accessToken);
     spotifyApi.setRefreshToken(token.refreshToken);
@@ -57,14 +58,19 @@ export default NextAuth({
       if (!(provider && type && token_type && expires_at && access_token && refresh_token && scope)) {
         return false
       }
-      if (!(provider === `spotify` && type === `oauth` && token_type === `Bearer`)){
+      if (!(provider === `spotify` && type === `oauth` && token_type === `Bearer`)) {
         return false
       }
       return true;
     },
-    async jwt({ token, account, user }) {
+    //@ts-ignore
+    async jwt(jwtObject) {
       try {
         //initial sign in
+        const token = jwtObject.token as JWTtoken
+        const account = jwtObject.account as SpotifyAccount | undefined
+        const user = jwtObject.user as SpotifyUser | undefined
+
         if (account && user) {
           return {
             ...token,
@@ -75,7 +81,7 @@ export default NextAuth({
           };
         }
         //if access token valid
-        else if (token.accessTokenExpires && Date.now() < token.accessTokenExpires) {
+        else if (token?.accessTokenExpires && Date.now() < token?.accessTokenExpires) {
           return token;
         }
 

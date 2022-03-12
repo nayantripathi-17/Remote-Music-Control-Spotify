@@ -3,29 +3,47 @@ import { getSession, useSession } from 'next-auth/react'
 import Head from 'next/head'
 import SpotifyWebApi from 'spotify-web-api-node'
 import urljoin from 'url-join'
-import Center from '../components/Center'
-import Player from '../components/Player'
-import Sidebar from '../components/Sidebar'
-import spotifyApi from '../lib/spotify'
-import { HomeProps, Pagination, ServerSession } from '../types'
+import { HomeProps, ServerSession } from '../types'
+import dynamic from 'next/dynamic'
+import fetchCurrentSong from '../lib/fetchCurrentSong'
+import { useCallback, useEffect } from 'react'
+import useSpotify from '../hooks/useSpotify'
+import { useRecoilState } from 'recoil'
+import { currentTrackIdState, isPlayingState } from '../atoms/songAtom'
 
+const DynamicPlayer = dynamic(() => import('../components/Player'))
+const DynamicSidebar = dynamic(() => import('../components/Sidebar'))
+const DynamicCenter = dynamic(() => import('../components/Center'))
 
 export default function Home({ playlists }: HomeProps) {
   const { data: session } = useSession();
 
+  const spotifyApi = useSpotify();
+  const [currentTrackId, setCurrentTrackId] = useRecoilState(currentTrackIdState);
+  const [isPlaying, setIsPlaying] = useRecoilState(isPlayingState);
+
+  const fetchCurrentSongMemo = useCallback(async () => {
+    await fetchCurrentSong(spotifyApi, setCurrentTrackId, setIsPlaying)
+  }, [spotifyApi, setCurrentTrackId, setIsPlaying])
+
+  useEffect(() => {
+    fetchCurrentSongMemo()
+  }, [fetchCurrentSongMemo])
+
   return (
-    <div>
+    <>
       <Head>
         <title>Remote Music Control</title>
       </Head>
       <main className="bg-black h-screen overflow-hidden flex">
-        <Sidebar playlists={playlists} />
-        <Center session={session} />
+        <DynamicSidebar playlists={playlists} />
+        <DynamicCenter session={session} />
       </main>
-      {/* <div className='overflow-hidden flex-grow w-full scrollbar-hide bottom-0 sticky'>
-        <Player />
-      </div> */}
-    </div>
+      {currentTrackId !== "" && currentTrackId != null && currentTrackId != undefined &&
+        <div className='overflow-hidden flex-grow w-full scrollbar-hide bottom-0 sticky'>
+          <DynamicPlayer />
+        </div>}
+    </>
   )
 }
 
@@ -44,7 +62,17 @@ export const getServerSideProps: GetServerSideProps = async (context: GetServerS
   spotifyApi.setAccessToken(String(session?.user.accessToken))
 
   const userPlayListResponse = await spotifyApi.getUserPlaylists({ limit: 50, offset: 0 })
-  const playlists = userPlayListResponse?.body?.items
+  const total = userPlayListResponse.body.total
+  var playlists = userPlayListResponse?.body?.items
+
+  var batches = total % 50 === 0 ? (total / 50) - 1 : Math.floor(total / 50)
+  const totalBatch = batches + 1
+
+  while (batches > 0) {
+    const response = await spotifyApi.getUserPlaylists({ limit: 50, offset: (totalBatch - batches) * 50 })
+    playlists = playlists.concat(response.body.items)
+    batches -= 1;
+  }
 
   return {
     props: {

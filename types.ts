@@ -2,13 +2,9 @@ import { Account, User } from "next-auth";
 import { BuiltInProviderType } from "next-auth/providers";
 import { ClientSafeProvider, LiteralUnion } from "next-auth/react";
 import { Session } from "next-auth";
-import { ReactElement, MouseEventHandler } from "react";
-
-export type ClickHandler = React.MouseEvent<HTMLElement>;
-
-export interface LoginProps {
-    providers: Record<LiteralUnion<BuiltInProviderType, string>, ClientSafeProvider>
-}
+import React, { ReactElement, MouseEventHandler } from "react";
+import { ErrorBoundaryProps } from "react-error-boundary";
+import { JWT } from "next-auth/jwt";
 
 export type ServerSession = (Session & {
     user: {
@@ -18,7 +14,35 @@ export type ServerSession = (Session & {
     }
 }) | null
 
-export type JWTtoken = Promise<JWTtoken | undefined> & {
+export type ClickHandler = React.MouseEvent<HTMLElement>;
+
+export interface LoginProps {
+    providers: Record<LiteralUnion<BuiltInProviderType, string>, ClientSafeProvider>
+}
+
+export interface HomeProps {
+    playlists: SpotifyApi.PlaylistObjectSimplified[]
+}
+
+export interface SongProps {
+    track: SpotifyApi.SavedTrackObject | SpotifyApi.PlaylistTrackObject,
+    order: number,
+}
+
+export interface CenterProps {
+    session: ServerSession | Session
+}
+
+export interface SidebarLinksProps {
+    component: ReactElement,
+    clickHandler: MouseEventHandler
+}
+
+export interface ErrorFallbackProps {
+    error: any
+}
+
+export type JWTtoken = JWT & {
     name: string,
     email: string,
     picture: string,
@@ -27,7 +51,7 @@ export type JWTtoken = Promise<JWTtoken | undefined> & {
     refreshToken?: string,
     profileName?: string
     accessTokenExpires?: number,
-}
+} | undefined
 
 export type SpotifyAccount = Account & {
     provider: 'spotify',
@@ -47,29 +71,14 @@ export type SpotifyUser = User & {
     image: string
 }
 
+// Custom Typeguards
 export const isSinglePlayListResponse = (playlist: any): playlist is SpotifyApi.SinglePlaylistResponse => {
+    if (playlist === null || playlist === undefined) return false
     return playlist?.tracks !== undefined
 }
 
-export interface SongProps {
-    track: SpotifyApi.SavedTrackObject,
-    order: number,
-}
-
-export interface CenterProps {
-    session: ServerSession | Session
-}
-export interface HomeProps {
-    // session: ServerSession | Session,
-    playlists: SpotifyApi.PlaylistObjectSimplified[]
-}
-
-export interface SidebarLinksProps {
-    component: ReactElement,
-    clickHandler: MouseEventHandler
-}
-
-export interface Pagination {
-    next?: string;
-    items: object[];
+export const isPlaylistTrackObject = (track: any): track is SpotifyApi.PlaylistTrackObject => {
+    if (track === null || track === undefined) return false
+    if (track.added_at && track.added_by && track.is_local !== undefined && track.is_local !== null && track.track) return true
+    return false
 }
